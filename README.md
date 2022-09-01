@@ -62,7 +62,24 @@ data by a data model. Please add proof that the solution is scalable.
     │
     └── tox.ini            <- tox file with settings for running tox; see tox.readthedocs.io
 
-##
+## Git Commit Convention
+The commits carried out in this project seek to follow this Git Commit pattern to facilitate maintenance and knowledge management:
+
+> 🔰 type (scope): subject
+
+### Symbols (🔰)
+https://gitmoji.dev 
+
+### Types
+- test: Indicates any type of creation or alteration of test codes
+- feat: Indicates the development of a new feature to the project
+- refactor: Refactoring that does not impact business logic/rules
+- style: Used when there are formatting and code style changes that do not change the system in any way.
+- fix: bug fix.
+- chore: Changes that do not affect source code or test files
+- docs: Change regarding files, directories and documentation
+- ci: CI configuration changes
+- local: Changes to the project's local run configuration
 
 --------
 
