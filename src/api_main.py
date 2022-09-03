@@ -6,7 +6,6 @@ from src import app
 from src.models.vehicle import *
 from src.data.database import Database
 from src.conf.config import config_variables
-from src.conf.utils import convert_dumps
 
 config = config_variables()
 
