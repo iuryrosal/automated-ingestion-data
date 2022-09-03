@@ -22,19 +22,6 @@ def get_query_params() -> dict:
   return args_dict
 
 @app.route("/vehicles", methods=["POST"])
-def create_individual_item():
-  content_type = request.headers.get("Content-Type")
-  if content_type == "application/json":
-    req_body = request.get_json()
-    vehicle_record = Vehicle(**req_body)
-    database.session.add(vehicle_record)
-    database.session.commit()
-    database.session.refresh(vehicle_record)
-    return {"item created": f"/vehicles/{vehicle_record.id}"}
-  else:
-    return "Content Type Not Supported!"
-
-@app.route("/vehicles/ingest-data", methods=["POST"])
 def start_ingest_data():
   t = Thread(target=ingestion_process.start)
   t.start()
