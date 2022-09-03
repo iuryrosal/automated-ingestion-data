@@ -1,17 +1,20 @@
 from flask import Flask, request
 import json
+from threading import Thread
 
 from src.models.vehicle import Vehicle
-from src import app
 from src.models.vehicle import *
 from src.data.database import Database
 from src.conf.config import config_variables
+from src.data.ingestion_process import IngestionProcess
+from src import app
 
 config = config_variables()
+ingestion_process = IngestionProcess("../data/raw/*.csv", config)
 
 def get_query_params() -> dict:
   args_dict = {}
-  args = ["region", "datasource",
+  args = ["region", "datasource", "date",
           "origin_coord_point_x", "origin_coord_point_y",
           "destination_coord_point_x", "destination_coord_point_y"]
   for arg in args:
@@ -30,6 +33,16 @@ def create_individual_item():
     return {"item created": f"/vehicles/{vehicle_record.id}"}
   else:
     return "Content Type Not Supported!"
+
+@app.route("/vehicles/ingest-data", methods=["POST"])
+def start_ingest_data():
+  t = Thread(target=ingestion_process.start)
+  t.start()
+  return "Ingestion Started"
+
+@app.route("/vehicles/ingest-data/status", methods=["GET"])
+def get_status_ingest_data():
+  return ingestion_process.get_status()
 
 @app.route("/vehicles/<id>", methods=["GET"])
 def get_item(id):
@@ -55,7 +68,9 @@ def get_items():
     where_expr.append(f"destination_coord_point_x LIKE '{str(query_params['destination_coord_point_x'])}%%'")
   if query_params["destination_coord_point_y"]:
     where_expr.append(f"destination_coord_point_y LIKE '{str(query_params['destination_coord_point_y'])}%%'")
-  
+  if query_params["date"]:
+    where_expr.append(f"datetime::TIMESTAMP::DATE = '{str(query_params['date'])}%%'")
+
   if len(where_expr) > 0:  # There is where expression
     count = 0
     while count < len(where_expr):
@@ -101,5 +116,7 @@ def get_weekly_avg_trips_by_region():
               """
   results = database.engine.execute(query_str)
   return {"data": [{key: value for (key, value) in results.items()} for results in results]}
+
+
 
 app.run(debug=True)
