@@ -240,6 +240,14 @@ Output:
     Ingestion Started
 
 
+## Local Execution
+1. Clone the Git repository.
+2. Put your csv files in data/raw directory.
+3. Boot two terminals in root folder project.
+4. Run `docker-compose up` in one terminal (first terminal).
+5. Run `python api_main.py` in another terminal (second terminal).
+6. Now, only make requests on the route displayed in the second terminal
+
 ## Git Commit Convention
 The commits carried out in this project seek to follow this Git Commit pattern to facilitate maintenance and knowledge management:
 
