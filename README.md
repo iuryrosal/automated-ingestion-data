@@ -62,6 +62,179 @@ data by a data model. Please add proof that the solution is scalable.
     │
     └── tox.ini            <- tox file with settings for running tox; see tox.readthedocs.io
 
+## API Contract
+
+### List of Trips (GET)
+Get all vehicles records in dataset.
+> /vehicles
+
+query_params avaliables in this route:
+- region : Get vehicles records in specific region
+- origin_coord_x : Get vehicles records in specific coordinate origin x 
+- origin_coord_y : Get vehicles records in specific coordinate origin y
+- destination_coord_x : Get vehicles records in specific coordinate destination x
+- destination_coord_y : Get vehicles records in specific coordinate destination y 
+- datasource : Get vehicles records filtering by datasource variable
+- date : Get vehicles records filtering by datetime column (considering only date statement)
+
+Example:
+
+`/vehicles?region=Turin`
+
+Sample Output:
+
+    {
+      "data": [
+        {
+            "datasource": "baba_car",
+            "datetime": "Mon, 21 May 2018 02:54:04 GMT",
+            "destination_coord_point_x": "7.72036863753512",
+            "destination_coord_point_y": "45.0678238539384",
+            "id": 1,
+            "origin_coord_point_x": "7.67283791328688",
+            "origin_coord_point_y": "44.995710924205",
+            "region": "Turin"
+        },
+        {
+            "datasource": "bad_diesel_vehicles",
+            "datetime": "Sun, 06 May 2018 09:49:16 GMT",
+            "destination_coord_point_x": "7.7452865344197",
+            "destination_coord_point_y": "45.0262859834150",
+            "id": 3,
+            "origin_coord_point_x": "7.54150918911443",
+            "origin_coord_point_y": "45.0916050382774",
+            "region": "Turin"
+        }
+      ]
+    }
+
+### Specific Vehicle Record (GET)
+Get specific vehicle record by specific (id).
+> /vehicles/(id)
+
+Example:
+
+`/vehicles/1`
+
+Sample Output:
+
+    {
+        "datasource": "baba_car",
+        "datetime": "Mon, 21 May 2018 02:54:04 GMT",
+        "destination_coord_point_x": "7.72036863753512",
+        "destination_coord_point_y": "45.0678238539384",
+        "id": 1,
+        "origin_coord_point_x": "7.67283791328688",
+        "origin_coord_point_y": "44 995710924205",
+        "region": "Turin"
+    }
+
+### Count by (GET)
+Get count of elements by specif (column) in dataset.
+> /vehicles/(column)/count
+
+Example:
+
+`/vehicles/region/count`
+
+Sample Output:
+
+    {
+     "data": [
+        {
+            "count": 28,
+            "region": "Hamburg"
+        },
+        {
+            "count": 34,
+            "region": "Prague"
+        },
+        {
+            "count": 38,
+            "region": "Turin"
+        }
+      ]
+    }
+
+
+### Weekly Trips (GET)
+Get count of elements per week (using datetime column) and region.
+> /vehicles/weekly_trips/region 
+
+Sample Output:
+
+    {
+      "data": [
+        {
+            "freq_trip": 5,
+            "region": "Hamburg",
+            "week_number": 18
+        },
+        {
+            "freq_trip": 10,
+            "region": "Prague",
+            "week_number": 18
+        },
+        {
+            "freq_trip": 8,
+            "region": "Turin",
+            "week_number": 18
+        }
+      ]
+    }
+
+### Weekly Average Trips (GET)
+Get average of elements per week (using datetime column) and region.
+> /vehicles/weekly_avg_trips/region
+
+Sample Output:
+
+    {
+      "data": [
+        {
+            "freq_avg_weekly_trips": "7.6000000000000000",
+            "region": "Turin"
+        },
+        {
+            "freq_avg_weekly_trips": "5.6000000000000000",
+            "region": "Hamburg"
+        },
+        {
+            "freq_avg_weekly_trips": "6.8000000000000000",
+            "region": "Prague"
+        }
+      ]
+    }
+
+### Status of Process' Data Ingestion (GET)
+Get status of process' data ingestion.
+> /vehicles/ingest-data/status
+
+Sample Output (1):
+
+    {
+        "review": "Nothing in processing"
+    }
+
+Sample Output (2):
+
+    {
+        "end_time": "09/03/2022, 17:33:17",
+        "lead_time": "0:00:00.002999",
+        "review": "Process Finished",
+        "start_time": "09/03/2022, 17:33:17"
+    }
+
+
+### Process' Data Ingestion (POST)
+Start ingestion process with CSVs file in data/raw. **This process will replace all data in dataset.** You can check status of process making request with Get Method to endpoint /**vehicles/ingest-data/status**.
+> /vehicles
+
+Output:
+
+    Ingestion Started
+
+
 ## Git Commit Convention
 The commits carried out in this project seek to follow this Git Commit pattern to facilitate maintenance and knowledge management:
 
