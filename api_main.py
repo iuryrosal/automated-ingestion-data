@@ -10,7 +10,7 @@ from src.data.ingestion_process import IngestionProcess
 from src import app
 
 config = config_variables()
-ingestion_process = IngestionProcess("../data/raw/*.csv", config)
+ingestion_process = IngestionProcess("data/raw/*.csv", config)
 
 def get_query_params() -> dict:
   args_dict = {}
