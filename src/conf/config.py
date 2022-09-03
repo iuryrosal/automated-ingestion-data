@@ -12,5 +12,7 @@ def config_variables():
   config["POSTGRES_DB"] = os.getenv("POSTGRES_DB", "data_vehicles")
   database = Database(config_dict=config)
   config["CONN_STR"] = database.get_conn_att()["CONN_STR"]
+  config["CONNECTION"] = database.get_conn_att()["CONNECTION"]
+  config["ENGINE"] = database.get_conn_att()["ENGINE"]
 
   return config
