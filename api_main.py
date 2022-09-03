@@ -23,8 +23,7 @@ def get_query_params() -> dict:
 
 @app.route("/vehicles", methods=["POST"])
 def start_ingest_data():
-  t = Thread(target=ingestion_process.start)
-  t.start()
+  Thread(target=ingestion_process.start).start()
   return "Ingestion Started"
 
 @app.route("/vehicles/ingest-data/status", methods=["GET"])
