@@ -14,7 +14,7 @@ ingestion_process = IngestionProcess("../data/raw/*.csv", config)
 
 def get_query_params() -> dict:
   args_dict = {}
-  args = ["region", "datasource", "date",
+  args = ["region", "datasource", "date", "limit",
           "origin_coord_point_x", "origin_coord_point_y",
           "destination_coord_point_x", "destination_coord_point_y"]
   for arg in args:
