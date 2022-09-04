@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, abort, Response
 import json
 from threading import Thread
 
@@ -11,6 +11,15 @@ from src import app
 
 config = config_variables()
 ingestion_process = IngestionProcess("data/raw/*.csv", config)
+
+def abort_with_error():
+  error_message = json.dumps({'Message': 'Something went wrong..'})
+  abort(Response(error_message, 400))
+
+def abort_get_freq_items_by_not_valid_column(column):
+  if column != "region" and column != "datasource":
+    error_message = json.dumps({'Message': f'Column {column} is not valid in this operation.'})
+    abort(Response(error_message, 400))
 
 def get_query_params() -> dict:
   args_dict = {}
@@ -28,86 +37,104 @@ def start_ingest_data():
 
 @app.route("/vehicles/ingest-data/status", methods=["GET"])
 def get_status_ingest_data():
-  return ingestion_process.get_status()
+  try:
+    return ingestion_process.get_status()
+  except:
+    abort_with_error()
 
 @app.route("/vehicles/<id>", methods=["GET"])
 def get_item(id):
-  item = Vehicle.query.get(id)
-  del item.__dict__["_sa_instance_state"]
-  return item.__dict__
+  try:
+    item = Vehicle.query.get(id)
+    del item.__dict__["_sa_instance_state"]
+    return item.__dict__
+  except:
+    abort_with_error()
 
 @app.route("/vehicles", methods=["GET"])
 def get_items():
-  query_params = get_query_params()
-  query_str = "SELECT * FROM vehicles_records"
-  where_expr = []
+  try:
+    query_params = get_query_params()
+    query_str = "SELECT * FROM vehicles_records"
+    where_expr = []
+    
+    if query_params["region"]:
+      where_expr.append(f"region = '{query_params['region']}'")
+    if query_params["datasource"]:
+      where_expr.append(f"datasource = '{query_params['datasource']}'")
+    if query_params["origin_coord_point_x"]:
+      where_expr.append(f"origin_coord_point_x LIKE '{str(query_params['origin_coord_point_x'])}%%'")
+    if query_params["origin_coord_point_y"]:
+      where_expr.append(f"origin_coord_point_y LIKE '{str(query_params['origin_coord_point_y'])}%%'")
+    if query_params["destination_coord_point_x"]:
+      where_expr.append(f"destination_coord_point_x LIKE '{str(query_params['destination_coord_point_x'])}%%'")
+    if query_params["destination_coord_point_y"]:
+      where_expr.append(f"destination_coord_point_y LIKE '{str(query_params['destination_coord_point_y'])}%%'")
+    if query_params["date"]:
+      where_expr.append(f"datetime::TIMESTAMP::DATE = '{str(query_params['date'])}%%'")
 
-  if query_params["region"]:
-    where_expr.append(f"region = '{query_params['region']}'")
-  if query_params["datasource"]:
-    where_expr.append(f"datasource = '{query_params['datasource']}'")
-  if query_params["origin_coord_point_x"]:
-    where_expr.append(f"origin_coord_point_x LIKE '{str(query_params['origin_coord_point_x'])}%%'")
-  if query_params["origin_coord_point_y"]:
-    where_expr.append(f"origin_coord_point_y LIKE '{str(query_params['origin_coord_point_y'])}%%'")
-  if query_params["destination_coord_point_x"]:
-    where_expr.append(f"destination_coord_point_x LIKE '{str(query_params['destination_coord_point_x'])}%%'")
-  if query_params["destination_coord_point_y"]:
-    where_expr.append(f"destination_coord_point_y LIKE '{str(query_params['destination_coord_point_y'])}%%'")
-  if query_params["date"]:
-    where_expr.append(f"datetime::TIMESTAMP::DATE = '{str(query_params['date'])}%%'")
-
-  if len(where_expr) > 0:  # There is where expression
-    count = 0
-    while count < len(where_expr):
-      if count == 0:  # first where condition 
-        query_str = query_str + (f" WHERE {where_expr[count]}")        
-      else:
-        query_str = query_str + (f" AND {where_expr[count]}")
-      count += 1
-  
+    if len(where_expr) > 0:  # There is where expression
+      count = 0
+      while count < len(where_expr):
+        if count == 0:  # first where condition 
+          query_str = query_str + (f" WHERE {where_expr[count]}")        
+        else:
+          query_str = query_str + (f" AND {where_expr[count]}")
+        count += 1
+    
     if query_params["limit"]:
       query_str = query_str + (f" LIMIT {query_params['limit']}")
     else:
       query_str = query_str + (" LIMIT 10")
     
-  results = database.engine.execute(query_str)
-  return {"data": [{key: value for (key, value) in results.items()} for results in results]}
+    results = database.engine.execute(query_str)
+    return {"data": [{key: value for (key, value) in results.items()} for results in results]}
+  except:
+    abort_with_error()
 
 @app.route("/vehicles/<column>/count", methods=["GET"])
 def get_freq_items(column):
-  query_str = f"SELECT {column}, COUNT({column}) FROM vehicles_records GROUP BY {column}"
-  results = database.engine.execute(query_str)
-  return {"data": [{key: value for (key, value) in results.items()} for results in results]}
+  try:
+    abort_get_freq_items_by_not_valid_column(column)
+    query_str = f"SELECT {column}, COUNT({column}) FROM vehicles_records GROUP BY {column}"
+    results = database.engine.execute(query_str)
+    return {"data": [{key: value for (key, value) in results.items()} for results in results]}
+  except:
+    abort_with_error()
 
 @app.route("/vehicles/weekly_trips/region", methods=["GET"])
 def get_weekly_trips_by_region():
-  query_str = f"""SELECT EXTRACT(WEEK FROM datetime)::integer as week_number,
-                    region,
-                    COUNT(*) AS freq_trip
-                  FROM vehicles_records
-                  GROUP BY EXTRACT(WEEK FROM datetime), region
-                  ORDER BY EXTRACT(WEEK FROM datetime), region"""
-  results = database.engine.execute(query_str)
-  return {"data": [{key: value for (key, value) in results.items()} for results in results]}
+  try:
+    query_str = f"""SELECT EXTRACT(WEEK FROM datetime)::integer as week_number,
+                      region,
+                      COUNT(*) AS freq_trip
+                    FROM vehicles_records
+                    GROUP BY EXTRACT(WEEK FROM datetime), region
+                    ORDER BY EXTRACT(WEEK FROM datetime), region"""
+    results = database.engine.execute(query_str)
+    return {"data": [{key: value for (key, value) in results.items()} for results in results]}
+  except:
+    abort_with_error()
 
 @app.route("/vehicles/weekly_avg_trips/region", methods=["GET"])
 def get_weekly_avg_trips_by_region():
-  query_str = f"""
-                  SELECT region, AVG(freq_trip)::VARCHAR(255) AS freq_avg_weekly_trips
-                  FROM
-                  (
-                      SELECT EXTRACT(WEEK FROM datetime)::INTEGER as week_number,
-                          region,
-                          COUNT(*) AS freq_trip
-                      FROM vehicles_records
-                      GROUP BY EXTRACT(WEEK FROM datetime), region
-                      ORDER BY EXTRACT(WEEK FROM datetime), region) AS weekly_freq_trips
-                  GROUP BY region
-              """
-  results = database.engine.execute(query_str)
-  return {"data": [{key: value for (key, value) in results.items()} for results in results]}
-
+  try:
+    query_str = f"""
+                    SELECT region, AVG(freq_trip)::VARCHAR(255) AS freq_avg_weekly_trips
+                    FROM
+                    (
+                        SELECT EXTRACT(WEEK FROM datetime)::INTEGER as week_number,
+                            region,
+                            COUNT(*) AS freq_trip
+                        FROM vehicles_records
+                        GROUP BY EXTRACT(WEEK FROM datetime), region
+                        ORDER BY EXTRACT(WEEK FROM datetime), region) AS weekly_freq_trips
+                    GROUP BY region
+                """
+    results = database.engine.execute(query_str)
+    return {"data": [{key: value for (key, value) in results.items()} for results in results]}
+  except:
+    abort_with_error()
 
 
 app.run(debug=True)
