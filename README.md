@@ -318,6 +318,11 @@ To upload this application to the cloud, I believe the application would be host
 ## About tests
 I didn't have time to do tests with 100% coverage, but I took the liberty of writing some to show off some of my knowledge and concern for having testable code.
 
+You can run the following command to test this: `pytest .\tests\ -vv`
+
+## Flake8
+Codes are standardized within flake8 rules. You can run the following command to test this: `flake8`
+
 ## Git Commit Convention
 The commits carried out in this project seek to follow this Git Commit pattern to facilitate maintenance and knowledge management:
 
