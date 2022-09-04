@@ -66,6 +66,11 @@ def get_items():
         query_str = query_str + (f" AND {where_expr[count]}")
       count += 1
   
+    if query_params["limit"]:
+      query_str = query_str + (f" LIMIT {query_params['limit']}")
+    else:
+      query_str = query_str + (" LIMIT 10")
+    
   results = database.engine.execute(query_str)
   return {"data": [{key: value for (key, value) in results.items()} for results in results]}
 
