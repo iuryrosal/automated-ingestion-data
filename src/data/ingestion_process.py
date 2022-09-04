@@ -1,4 +1,3 @@
-from tracemalloc import start
 import pandas as pd
 import numpy as np
 import glob
@@ -8,11 +7,12 @@ from pandas import DataFrame
 from datetime import datetime
 import logging
 
+
 class IngestWorker(Thread):
     def __init__(self, queue):
         Thread.__init__(self)
         self.queue = queue
-    
+
     def run(self) -> None:
         while True:
             engine, dataframe = self.queue.get()
@@ -21,12 +21,13 @@ class IngestWorker(Thread):
             finally:
                 self.queue.task_done()
 
+
 class IngestionProcess:
     def __init__(self, direc: str, config: dict) -> None:
         self.dir = direc
         self.conf = config
         self.status = {"review": "Nothing in processing",
-                        "details": []}
+                       "details": []}
 
     def pick_local_files(self) -> list:
         '''
@@ -34,8 +35,10 @@ class IngestionProcess:
         '''
         logging.debug("Detect files: " + str(self.dir))
         return glob.glob(self.dir)
-    
-    def convert_local_files_to_sql(self, queue, files: list, index: int = 0) -> DataFrame:
+
+    def convert_local_files_to_sql(self, queue,
+                                   files: list,
+                                   index: int = 0) -> DataFrame:
         '''
             Pick a all CSVs files and make the ingestion process
         '''
@@ -43,23 +46,25 @@ class IngestionProcess:
         try:
             if index >= len(files):
                 self.status["review"] = "Process Finished"
-                
                 now = datetime.now()
                 self.status["lead_time"] = str(now - self.status["start_time"])
-                self.status["start_time"] = self.status["start_time"].strftime("%m/%d/%Y, %H:%M:%S")
+                self.status["start_time"] = (self
+                                             .status["start_time"]
+                                             .strftime("%m/%d/%Y, %H:%M:%S"))
                 self.status["end_time"] = now.strftime("%m/%d/%Y, %H:%M:%S")
-                logging.debug(f"Process Finished. Lead time: {self.status['lead_time']}")
+                logging.debug(f"""Process Finished.
+                              Lead time: {self.status['lead_time']}""")
                 return "Process Finished"
             else:
                 logging.debug(f"{files[index]} in progress...")
                 self.status["review"] = f"{files[index]}: In progress.."
-                df_process_result = self.convert_csv_to_sql(queue, files[index])
+                df_process_result = (self
+                                     .convert_csv_to_sql(queue, files[index]))
                 self.status["details"].append(df_process_result)
                 logging.debug(f"{files[index]} Finished.")
                 return self.convert_local_files_to_sql(queue, files, index + 1)
         except Exception as e:
             logging.error(str(e))
-
 
     def convert_csv_to_sql(self, queue, file: str) -> DataFrame:
         '''
@@ -100,36 +105,44 @@ class IngestionProcess:
 
     def get_status(self):
         '''
-            Get status attribute with information about the data ingestion process
+            Get status attribute with information
+            about the data ingestion process
         '''
         return self.status
 
-def process_data(engine, df: DataFrame) -> DataFrame:
-        def make_point_tuple(record):
-            ''' 
-                Transform "POINT (123, 456)" to "123, 456".
-                The tuple structure is easier to make some manipulation than first format.
-            '''
-            record = record.lstrip("POINT ")
-            first_coord = record[(record.find("(")+1):(record.find(" ")-1)]
-            last_coord = record[(record.find(" ")+1):(record.find(")")-1)]
-            tuple_point = str(first_coord) + "," + str(last_coord)
-            return tuple_point
-        
-        df.datetime = pd.to_datetime(df.datetime)
-        df.origin_coord = df.origin_coord.apply(make_point_tuple).str.split(",")
-        df.destination_coord = df.destination_coord.apply(make_point_tuple).str.split(",")
-        
-        # Split array column into multiple columns pandas
-        df_origin_coords = df.origin_coord.apply(pd.Series)
-        df_origin_coords.columns = ["origin_coord_point_x", "origin_coord_point_y"]
-        df_destination_coords = df.destination_coord.apply(pd.Series)
-        df_destination_coords.columns = ["destination_coord_point_x", "destination_coord_point_y"]
-        df = pd.concat([df, df_origin_coords, df_destination_coords], axis=1)
 
-        # Remove unnecessary columns
-        df.drop(columns=["origin_coord", "destination_coord"],
-                inplace=True)
-        
-        # Send dataframe to SQL table
-        df.to_sql("vehicles_records", engine, if_exists="append", index=True, index_label='id')
+def process_data(engine, df: DataFrame) -> DataFrame:
+    def make_point_tuple(record):
+        '''
+            Transform "POINT (123, 456)" to "123, 456".
+            The tuple structure is easier to make some
+            manipulation than first format.
+        '''
+        record = record.lstrip("POINT ")
+        first_coord = record[(record.find("(")+1):(record.find(" ")-1)]
+        last_coord = record[(record.find(" ")+1):(record.find(")")-1)]
+        tuple_point = str(first_coord) + "," + str(last_coord)
+        return tuple_point
+    df.datetime = pd.to_datetime(df.datetime)
+    df.origin_coord = df.origin_coord.apply(make_point_tuple).str.split(",")
+    df.destination_coord = (df.destination_coord
+                            .apply(make_point_tuple)
+                            .str.split(","))
+
+    # Split array column into multiple columns pandas
+    df_origin_coords = df.origin_coord.apply(pd.Series)
+    df_origin_coords.columns = ["origin_coord_point_x", "origin_coord_point_y"]
+    df_destination_coords = df.destination_coord.apply(pd.Series)
+    df_destination_coords.columns = ["destination_coord_point_x",
+                                     "destination_coord_point_y"]
+    df = pd.concat([df, df_origin_coords, df_destination_coords], axis=1)
+
+    # Remove unnecessary columns
+    df.drop(columns=["origin_coord", "destination_coord"],
+            inplace=True)
+
+    # Send dataframe to SQL table
+    df.to_sql("vehicles_records", engine,
+              if_exists="append",
+              index=True,
+              index_label='id')

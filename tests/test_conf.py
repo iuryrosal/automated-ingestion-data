@@ -10,19 +10,22 @@ env = {
     "POSTGRES_DB": "data_vehicles",
     "CONN_STR": "sqlite://",
     "CONNECTION": "conn",
-    "ENGINE": "engine"
-  }
+    "ENGINE": "engine",
+    "ENV": "local"
+}
+
 
 def get_conn_att():
-  return {
+    return {
         "CONN_STR": "sqlite://",
-    "CONNECTION": "conn",
-    "ENGINE": "engine"
-  }
+        "CONNECTION": "conn",
+        "ENGINE": "engine"
+    }
+
 
 @patch("src.data.database.Database.get_conn_att")
 def test_config_local_env(mock_get_conn_att):
-  mock_get_conn_att.return_value = get_conn_att()
-  config = config_variables()
-  config_dict_expected = env
-  assert config_dict_expected == config
+    mock_get_conn_att.return_value = get_conn_att()
+    config = config_variables()
+    config_dict_expected = env
+    assert config_dict_expected == config
