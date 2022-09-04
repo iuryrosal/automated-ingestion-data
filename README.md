@@ -81,6 +81,7 @@ query_params avaliables in this route:
 - destination_coord_y : Get vehicles records in specific coordinate destination y 
 - datasource : Get vehicles records filtering by datasource variable
 - date : Get vehicles records filtering by datetime column (considering only date statement)
+- limit: Limit of records ​​that will be returned (Default: 10)
 
 Example:
 
