@@ -37,7 +37,7 @@ class IngestionProcess:
     
     def convert_local_files_to_sql(self, queue, files: list, index: int = 0) -> DataFrame:
         '''
-            Pick a lot of CSV file and make the ingestion process
+            Pick a all CSVs files and make the ingestion process
         '''
 
         try:
