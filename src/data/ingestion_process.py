@@ -5,7 +5,7 @@ import glob
 from threading import Thread
 from pandas import DataFrame
 from datetime import datetime
-
+import logging
 class IngestionProcess:
     def __init__(self, direc: str, config: dict) -> None:
         self.dir = direc
@@ -17,27 +17,33 @@ class IngestionProcess:
         '''
             Make a list of files in directory (dir object attribute)
         '''
-        print(glob.glob(self.dir))
+        logging.debug("Detect files: " + str(self.dir))
         return glob.glob(self.dir)
     
     def convert_local_files_to_sql(self, files: list, index: int = 0, process_result_array: list = []) -> DataFrame:
         '''
             Pick a lot of CSV file and make the ingestion process
         '''
-        if index >= len(files):
-            self.status["review"] = "Process Finished"
-            
-            now = datetime.now()
-            self.status["lead_time"] = str(now - self.status["start_time"])
-            self.status["start_time"] = self.status["start_time"].strftime("%m/%d/%Y, %H:%M:%S")
-            self.status["end_time"] = now.strftime("%m/%d/%Y, %H:%M:%S")
+        try:
+            if index >= len(files):
+                self.status["review"] = "Process Finished"
+                
+                now = datetime.now()
+                self.status["lead_time"] = str(now - self.status["start_time"])
+                self.status["start_time"] = self.status["start_time"].strftime("%m/%d/%Y, %H:%M:%S")
+                self.status["end_time"] = now.strftime("%m/%d/%Y, %H:%M:%S")
+                logging.debug(f"Process Finished. Lead time: {self.status['lead_time']}")
+                return "Process Finished"
+            else:
+                logging.debug(f"{files[index]} in progress...")
+                df_process_result = self.convert_csv_to_sql(files[index])
+                self.status["details"].append(df_process_result)
+                logging.debug(f"{files[index]} Finished.")
+                return self.convert_local_files_to_sql(files, index + 1, process_result_array)
+        except Exception as e:
+            logging.error(str(e))
 
-            return "Process Finished"
-        else:
-            df_process_result = self.convert_csv_to_sql(files[index])
-            self.status["details"].append(df_process_result)
-            return self.convert_local_files_to_sql(files, index + 1, process_result_array)
-    
+
     def convert_csv_to_sql(self, file: str) -> DataFrame:
         '''
             Transform dataframe in SQL table using batch process
@@ -64,7 +70,8 @@ class IngestionProcess:
                     "lead_time": str(end_time - start_time),
                     "result": "Successful Data Ingestion",
                     "num_rows": np.sum(len_file)}
-        except:
+        except Exception as e:
+            logging.error(str(e))
             return {"file": file,
                     "result": "Fail during Data Ingestion"}
     
