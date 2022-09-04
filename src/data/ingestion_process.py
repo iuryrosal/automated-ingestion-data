@@ -26,7 +26,7 @@ class IngestionProcess:
     def __init__(self, direc: str, config: dict) -> None:
         self.dir = direc
         self.conf = config
-        self.status = {"review": "Nothing in processing",
+        self.status = {"review": "Nothing is being processed",
                        "details": []}
 
     def pick_local_files(self) -> list:
