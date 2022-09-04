@@ -216,24 +216,54 @@ Sample Output:
 Get status of process' data ingestion.
 > /vehicles/ingest-data/status
 
-Sample Output (1):
+Sample Output (1) -> Nothing in processing:
 
     {
         "review": "Nothing in processing"
     }
 
-Sample Output (2):
+Sample Output (2) -> Something in progress... :
 
     {
-        "end_time": "09/03/2022, 17:33:17",
-        "lead_time": "0:00:00.002999",
-        "review": "Process Finished",
-        "start_time": "09/03/2022, 17:33:17"
+      "details": [
+        {
+            "file": "data/stress_test\\trips_big_dataset.csv",
+            "lead_time": "0:01:22.754150",
+            "num_rows": 102400,
+            "result": "Successful Data Ingestion"
+        }
+      ],
+      "review": "data/stress_test\\trips_big_dataset_1.csv: In progress..",
+      "start_time": "Sat, 03 Sep 2022 20:37:37 GMT"
+    }
+
+Sample Output (3) -> Process Finished:
+
+    {
+      "details": [
+        {
+            "file": "data/raw\\trips copy.csv",
+            "lead_time": "0:00:00.172140",
+            "num_rows": 100,
+            "result": "Successful Data Ingestion"
+        },
+        {
+            "file": "data/raw\\trips.csv",
+            "lead_time": "0:00:00.141916",
+            "num_rows": 100,
+            "result": "Successful Data Ingestion"
+        }
+      ],
+      "end_time": "09/03/2022, 20:45:15",
+      "lead_time": "0:00:00.315056",
+      "review": "Process Finished",
+      "start_time": "09/03/2022, 20:45:14"
     }
 
 
+
 ### Process' Data Ingestion (POST)
-Start ingestion process with CSVs file in data/raw. **This process will replace all data in dataset.** You can check status of process making request with Get Method to endpoint /**vehicles/ingest-data/status**.
+Start ingestion process with CSVs file in data/raw. **This process will append new data in dataset.** You can check status of process making request with Get Method to endpoint /**vehicles/ingest-data/status**.
 > /vehicles
 
 Output:
