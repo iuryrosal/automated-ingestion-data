@@ -15,12 +15,15 @@ class IngestionProcess:
 
     def pick_local_files(self) -> list:
         '''
-            Make a list of files in some directory
+            Make a list of files in directory (dir object attribute)
         '''
         print(glob.glob(self.dir))
         return glob.glob(self.dir)
     
     def convert_local_files_to_sql(self, files: list, index: int = 0, process_result_array: list = []) -> DataFrame:
+        '''
+            Pick a lot of CSV file and make the ingestion process
+        '''
         if index >= len(files):
             self.status["review"] = "Process Finished"
             
@@ -36,6 +39,9 @@ class IngestionProcess:
             return self.convert_local_files_to_sql(files, index + 1, process_result_array)
     
     def convert_csv_to_sql(self, file: str) -> DataFrame:
+        '''
+            Transform dataframe in SQL table using batch process
+        '''
         start_time = datetime.now()
         len_file = np.zeros(1)
         threads = []
@@ -85,16 +91,24 @@ class IngestionProcess:
         df_destination_coords.columns = ["destination_coord_point_x", "destination_coord_point_y"]
         df = pd.concat([df, df_origin_coords, df_destination_coords], axis=1)
 
+        # Remove unnecessary columns
         df.drop(columns=["origin_coord", "destination_coord"],
                 inplace=True)
-        print(df.head(1))
+        
+        # Send dataframe to SQL table
         df.to_sql("vehicles_records", self.conf["ENGINE"], if_exists="append", index=True, index_label='id')
 
     def start(self):
+        '''
+            Start the data ingestion process
+        '''
         now = datetime.now()
         self.status["start_time"] = now
         self.status["review"] = "Data Ingestion in Progress."
         self.convert_local_files_to_sql(self.pick_local_files())
 
     def get_status(self):
+        '''
+            Get status attribute with information about the data ingestion process
+        '''
         return self.status
