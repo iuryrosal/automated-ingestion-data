@@ -5,6 +5,7 @@ def config_variables():
   config = {}
 
   # Env variables of postgresql database
+    config["ENV"] = os.getenv("ENV", "local")
   config["POSTGRES_USER"] = os.getenv("POSTGRES_USER", "root")
   config["POSTGRES_PASSWORD"] = os.getenv("POSTGRES_PASSWORD", "password")
   config["POSTGRES_HOST"] = os.getenv("POSTGRES_HOST", "localhost")
