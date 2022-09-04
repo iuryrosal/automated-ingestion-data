@@ -7,6 +7,9 @@ from src.models.vehicle import Vehicle
 def get_routes(app):
   @app.route("/vehicles/ingest-data/status", methods=["GET"])
   def get_status_ingest_data():
+    '''
+      Get status of process' data ingestion.
+    '''
     try:
       return ingestion_process.get_status()
     except Exception as e:
@@ -15,6 +18,9 @@ def get_routes(app):
 
   @app.route("/vehicles/<id>", methods=["GET"])
   def get_item(id):
+    '''
+      Get specific vehicle record by specific (id).
+    '''
     abort_get_item_if_id_not_exist(id)
     try:
       item = Vehicle.query.get(id)
@@ -26,6 +32,9 @@ def get_routes(app):
 
   @app.route("/vehicles", methods=["GET"])
   def get_items():
+    '''
+      Get all vehicles records in dataset with query parameters.
+    '''
     try:
       query_params = get_query_params()
       query_str = "SELECT * FROM vehicles_records"
@@ -39,6 +48,9 @@ def get_routes(app):
 
   @app.route("/vehicles/<column>/count", methods=["GET"])
   def get_freq_items(column):
+    '''
+      Get count of elements by specif (column) in dataset.
+    '''
     abort_get_freq_items_by_not_valid_column(column)
     try:
       query_str = f"SELECT {column}, COUNT({column}) FROM vehicles_records GROUP BY {column}"
@@ -50,6 +62,9 @@ def get_routes(app):
 
   @app.route("/vehicles/weekly_trips/region", methods=["GET"])
   def get_weekly_trips_by_region():
+    '''
+      Get count of elements per week (using datetime column) and region.
+    '''
     try:
       query_str = f"""SELECT EXTRACT(WEEK FROM datetime)::integer as week_number,
                         region,
@@ -65,6 +80,9 @@ def get_routes(app):
 
   @app.route("/vehicles/weekly_avg_trips/region", methods=["GET"])
   def get_weekly_avg_trips_by_region():
+    '''
+      Get average of elements per week (using datetime column) and region.
+    '''
     try:
       query_str = f"""
                       SELECT region, AVG(freq_trip)::VARCHAR(255) AS freq_avg_weekly_trips
