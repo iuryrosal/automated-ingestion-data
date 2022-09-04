@@ -5,4 +5,4 @@ from src.api_routes.post import post_routes
 if __name__ == "__main__":
   get_routes(app)
   post_routes(app)
-  app.run(debug=True)
+  app.run(host="0.0.0.0", debug=True)
