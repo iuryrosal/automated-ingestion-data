@@ -341,6 +341,18 @@ https://gitmoji.dev
 - ci: CI configuration changes
 - local: Changes to the project's local run configuration
 
+## Logging 
+Log file: api.log
+Log format:
+
+> %(asctime)s :: %(levelname)s :: %(filename)s :: %(lineno)d :: %(message)s
+
+- asctime: Human-readable time when the LogRecord was created. By default this is of the form ‘2003-07-08 16:49:45,896’ (the numbers after the comma are millisecond portion of the time).
+- levelname: Text logging level for the message ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL').
+- filename: Filename portion of pathname.
+- lineno: Source line number where the logging call was issued (if available).
+- message: The logged message, computed as msg % args.
+
 --------
 
 <p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
