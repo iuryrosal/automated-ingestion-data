@@ -1,6 +1,8 @@
+from tracemalloc import start
 import pandas as pd
+import numpy as np
 import glob
-import multiprocessing as mp
+from threading import Thread
 from pandas import DataFrame
 from datetime import datetime
 
@@ -8,7 +10,8 @@ class IngestionProcess:
     def __init__(self, direc: str, config: dict) -> None:
         self.dir = direc
         self.conf = config
-        self.status = {"review": "Nothing in processing"}
+        self.status = {"review": "Nothing in processing",
+                        "details": []}
 
     def pick_local_files(self) -> list:
         '''
@@ -29,14 +32,35 @@ class IngestionProcess:
             return "Process Finished"
         else:
             df_process_result = self.convert_csv_to_sql(files[index])
+            self.status["details"].append(df_process_result)
             return self.convert_local_files_to_sql(files, index + 1, process_result_array)
     
     def convert_csv_to_sql(self, file: str) -> DataFrame:
-        mp.Pool(5)
-        chunks = pd.read_csv(file, chunksize=1000000)
-        for chunk in chunks:
-            self.process_data(chunk)
-        return "Successful Data Ingestion."
+        start_time = datetime.now()
+        len_file = np.zeros(1)
+        threads = []
+        self.status["review"] = f"{file}: In progress.."
+        try:
+            for chunk_df in pd.read_csv(file, chunksize=1000000):
+                t = Thread(target=self.process_data, args=(chunk_df,))
+                threads.append(t)
+                t.start()
+                len_file = np.append(len_file, chunk_df.shape[0])
+                if len(threads) == 10:
+                    for t in threads:
+                        t.join()
+
+            if len(threads) > 0: 
+                for t in threads:
+                    t.join()
+            end_time = datetime.now()
+            return {"file": file,
+                    "lead_time": str(end_time - start_time),
+                    "result": "Successful Data Ingestion",
+                    "num_rows": np.sum(len_file)}
+        except:
+            return {"file": file,
+                    "result": "Fail during Data Ingestion"}
     
     def process_data(self, df: DataFrame) -> DataFrame:
         def make_point_tuple(record):
@@ -64,7 +88,7 @@ class IngestionProcess:
         df.drop(columns=["origin_coord", "destination_coord"],
                 inplace=True)
         print(df.head(1))
-        df.to_sql("vehicles_records", self.conf["ENGINE"], if_exists="replace", index=True, index_label='id')
+        df.to_sql("vehicles_records", self.conf["ENGINE"], if_exists="append", index=True, index_label='id')
 
     def start(self):
         now = datetime.now()
