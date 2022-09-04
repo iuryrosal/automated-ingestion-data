@@ -3,7 +3,8 @@ from unittest.mock import patch, call
 from src.data.database import Database
 from src.conf.config import config_variables
 
-conn_str_expected = "postgresql+psycopg2://root:password@localhost:5432/data_vehicles"
+conn_str_expected = "sqlite://"
+
 
 @patch.object(Database, 'create_engine_db')
 def test_conn(mock_create_engine_db):

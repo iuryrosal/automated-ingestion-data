@@ -8,14 +8,14 @@ env = {
     "POSTGRES_HOST": "localhost",
     "POSTGRES_PORT": 5432,
     "POSTGRES_DB": "data_vehicles",
-    "CONN_STR": "postgresql+psycopg2://root:password@localhost:5432/data_vehicles",
+    "CONN_STR": "sqlite://",
     "CONNECTION": "conn",
     "ENGINE": "engine"
   }
 
 def get_conn_att():
   return {
-    "CONN_STR": "postgresql+psycopg2://root:password@localhost:5432/data_vehicles",
+        "CONN_STR": "sqlite://",
     "CONNECTION": "conn",
     "ENGINE": "engine"
   }
