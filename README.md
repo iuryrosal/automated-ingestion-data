@@ -279,6 +279,49 @@ Output:
 5. Run `python api_main.py` in another terminal (second terminal).
 6. Now, only make requests on the route displayed in the second terminal
 
+## Scalability
+The app have some mechanisms that helps in scalability of solution.
+- In POST route that starts ingestion process, the program put this task in background using timeout. This avoid the risk of timeout response in this route.
+- In ingestion process, the program use batch processing with threading and chunk ramification. This can help performance in situation you have a big csv file.
+- In case of 100 millions of lines entry, I didn't can test in my local machine, but I believe the mechanisms commented before can help in this situation. In this case, its more recommend that the app hosted in virtual machine with more memory enabled, like AWS EC2 in memory optimized instances.
+
+### Local Stress Test
+Using script tests/stress_test.py I builded 10 CSVs with 1 million records. I changed the directory of ingestion process to data/stress_test directory and I did the ingestion data by API in local execution.
+
+The sample of result of this process is detailed below:
+
+    {
+      "details": [
+        {
+            "file": "data/stress_test\\trips_big_dataset.csv",
+            "lead_time": "0:01:27.034481",
+            "num_rows": 102400,
+            "result": "Successful Data Ingestion"
+        },
+        {
+            "file": "data/stress_test\\trips_big_dataset_1.csv",
+            "lead_time": "0:06:51.535297",
+            "num_rows": 1024000,
+            "result": "Successful Data Ingestion"
+        },
+        {
+            "file": "data/stress_test\\trips_big_dataset_10.csv",
+            "lead_time": "0:06:48.626142",
+            "num_rows": 1024000,
+            "result": "Successful Data Ingestion"
+        },
+        {
+            "file": "data/stress_test\\trips_big_dataset_2.csv",
+            "lead_time": "0:06:50.248607",
+            "num_rows": 1024000,
+            "result": "Successful Data Ingestion"
+        }
+      ],
+      "review": "data/stress_test\\trips_big_dataset_3.csv: In progress..",
+      "start_time": "Sun, 04 Sep 2022 11:28:16 GMT"
+    }
+
+
 ## Git Commit Convention
 The commits carried out in this project seek to follow this Git Commit pattern to facilitate maintenance and knowledge management:
 
