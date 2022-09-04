@@ -135,6 +135,8 @@ Example:
 
 `/vehicles/region/count`
 
+Obs: This operation is valid only for columns datasource and region.
+
 Sample Output:
 
     {
