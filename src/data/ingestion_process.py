@@ -3,9 +3,24 @@ import pandas as pd
 import numpy as np
 import glob
 from threading import Thread
+from queue import Queue
 from pandas import DataFrame
 from datetime import datetime
 import logging
+
+class IngestWorker(Thread):
+    def __init__(self, queue):
+        Thread.__init__(self)
+        self.queue = queue
+    
+    def run(self) -> None:
+        while True:
+            engine, dataframe = self.queue.get()
+            try:
+                process_data(engine, dataframe)
+            finally:
+                self.queue.task_done()
+
 class IngestionProcess:
     def __init__(self, direc: str, config: dict) -> None:
         self.dir = direc
@@ -20,10 +35,11 @@ class IngestionProcess:
         logging.debug("Detect files: " + str(self.dir))
         return glob.glob(self.dir)
     
-    def convert_local_files_to_sql(self, files: list, index: int = 0, process_result_array: list = []) -> DataFrame:
+    def convert_local_files_to_sql(self, queue, files: list, index: int = 0) -> DataFrame:
         '''
             Pick a lot of CSV file and make the ingestion process
         '''
+        print("oi")
         try:
             if index >= len(files):
                 self.status["review"] = "Process Finished"
@@ -35,36 +51,29 @@ class IngestionProcess:
                 logging.debug(f"Process Finished. Lead time: {self.status['lead_time']}")
                 return "Process Finished"
             else:
+                print(f"{files[index]} in progress...")
                 logging.debug(f"{files[index]} in progress...")
-                df_process_result = self.convert_csv_to_sql(files[index])
+                self.status["review"] = f"{files[index]}: In progress.."
+                df_process_result = self.convert_csv_to_sql(queue, files[index])
                 self.status["details"].append(df_process_result)
                 logging.debug(f"{files[index]} Finished.")
-                return self.convert_local_files_to_sql(files, index + 1, process_result_array)
+                return self.convert_local_files_to_sql(queue, files, index + 1)
         except Exception as e:
             logging.error(str(e))
 
 
-    def convert_csv_to_sql(self, file: str) -> DataFrame:
+    def convert_csv_to_sql(self, queue, file: str) -> DataFrame:
         '''
             Transform dataframe in SQL table using batch process
         '''
         start_time = datetime.now()
         len_file = np.zeros(1)
-        threads = []
-        self.status["review"] = f"{file}: In progress.."
         try:
-            for chunk_df in pd.read_csv(file, chunksize=1000000):
-                t = Thread(target=self.process_data, args=(chunk_df,))
-                threads.append(t)
-                t.start()
+            for chunk_df in pd.read_csv(file, chunksize=100000):
+                logging.info('Queueing {}'.format(str(chunk_df.shape)))
+                queue.put((self.conf["ENGINE"], chunk_df))
                 len_file = np.append(len_file, chunk_df.shape[0])
-                if len(threads) == 10:
-                    for t in threads:
-                        t.join()
-
-            if len(threads) > 0: 
-                for t in threads:
-                    t.join()
+            queue.join()
             end_time = datetime.now()
             return {"file": file,
                     "lead_time": str(end_time - start_time),
@@ -74,8 +83,29 @@ class IngestionProcess:
             logging.error(str(e))
             return {"file": file,
                     "result": "Fail during Data Ingestion"}
-    
-    def process_data(self, df: DataFrame) -> DataFrame:
+
+    def start(self):
+        '''
+            Start the data ingestion process
+        '''
+        now = datetime.now()
+        self.status["start_time"] = now
+        self.status["review"] = "Data Ingestion in Progress."
+        queue = Queue()
+        logging.info("Loading workers...")
+        for x in range(10):
+            worker = IngestWorker(queue)
+            worker.daemon = True
+            worker.start()
+        self.convert_local_files_to_sql(queue, self.pick_local_files())
+
+    def get_status(self):
+        '''
+            Get status attribute with information about the data ingestion process
+        '''
+        return self.status
+
+def process_data(engine, df: DataFrame) -> DataFrame:
         def make_point_tuple(record):
             ''' 
                 Transform "POINT (123, 456)" to "123, 456".
@@ -103,19 +133,4 @@ class IngestionProcess:
                 inplace=True)
         
         # Send dataframe to SQL table
-        df.to_sql("vehicles_records", self.conf["ENGINE"], if_exists="append", index=True, index_label='id')
-
-    def start(self):
-        '''
-            Start the data ingestion process
-        '''
-        now = datetime.now()
-        self.status["start_time"] = now
-        self.status["review"] = "Data Ingestion in Progress."
-        self.convert_local_files_to_sql(self.pick_local_files())
-
-    def get_status(self):
-        '''
-            Get status attribute with information about the data ingestion process
-        '''
-        return self.status
+        df.to_sql("vehicles_records", engine, if_exists="append", index=True, index_label='id')
