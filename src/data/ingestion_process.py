@@ -39,7 +39,7 @@ class IngestionProcess:
         '''
             Pick a lot of CSV file and make the ingestion process
         '''
-        print("oi")
+
         try:
             if index >= len(files):
                 self.status["review"] = "Process Finished"
@@ -51,7 +51,6 @@ class IngestionProcess:
                 logging.debug(f"Process Finished. Lead time: {self.status['lead_time']}")
                 return "Process Finished"
             else:
-                print(f"{files[index]} in progress...")
                 logging.debug(f"{files[index]} in progress...")
                 self.status["review"] = f"{files[index]}: In progress.."
                 df_process_result = self.convert_csv_to_sql(queue, files[index])
