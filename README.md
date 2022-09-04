@@ -312,6 +312,11 @@ The sample of result of this process is detailed below:
       "start_time": "Sun, 04 Sep 2022 11:28:16 GMT"
     }
 
+## Go up in the cloud (AWS)
+To upload this application to the cloud, I believe the application would be hosted on a memory-optimized AWS EC2 instance or AWS ECS. The database can be allocated in RDS and CSVs can be allocated to be read from an S3 bucket. However, this would require some adaptations to the source code.
+
+## About tests
+I didn't have time to do tests with 100% coverage, but I took the liberty of writing some to show off some of my knowledge and concern for having testable code.
 
 ## Git Commit Convention
 The commits carried out in this project seek to follow this Git Commit pattern to facilitate maintenance and knowledge management:
