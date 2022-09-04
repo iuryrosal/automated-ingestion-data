@@ -208,10 +208,10 @@ Sample Output:
 Get status of process' data ingestion.
 > /vehicles/ingest-data/status
 
-Sample Output (1) -> Nothing in processing:
+Sample Output (1) -> Nothing is being processed:
 
     {
-        "review": "Nothing in processing"
+        "review": "Nothing is being processed"
     }
 
 Sample Output (2) -> Something in progress... :
