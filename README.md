@@ -274,10 +274,9 @@ Output:
 ## Local Execution
 1. Clone the Git repository.
 2. Put your csv files in data/raw directory.
-3. Boot two terminals in root folder project.
-4. Run `docker-compose up` in one terminal (first terminal).
-5. Run `python api_main.py` in another terminal (second terminal).
-6. Now, only make requests on the route displayed in the second terminal
+3. Boot one terminal in root folder project.
+4. Run `docker-compose up` in terminal.
+5. Now, only make requests on the url base http://localhost:5000.
 
 ## Scalability
 The app have some mechanisms that helps in scalability of solution.
